@@ -45,7 +45,6 @@ exports.getIndex = async (req, res, next) => {
 exports.getCart = async (req, res, next) => {
   try {
     const products = await User.findById(req.user._id).populate('cart.items.productId');
-    console.log('//////////////////////////////////////////////reagegraegreaheraegr', products.cart.items)
     res.render('shop/cart', {
       path: '/cart',
       pageTitle: 'Your Cart',
@@ -104,13 +103,20 @@ exports.postOrder = async (req, res, next) => {
 
 exports.getOrders = async (req, res, next) => {
   try {
-    const orders = await req.user.getOrders();
+    const orders = await Order.find({ 'user.userId': req.user._id });
+    // console.log('///////////', orders.products, '//////////////')
+    orders.forEach(order => {
+      // console.log(order.products)
+      order.products.forEach(product => {
+        console.log('//////////', product, '///////')
+      })
+    })
     res.render('shop/orders', {
       path: '/orders',
       pageTitle: 'Your Orders',
       orders: orders
     });
   } catch (error) {
-    console.log(error, '//////////////////////');
+    console.log(error);
   }
 };

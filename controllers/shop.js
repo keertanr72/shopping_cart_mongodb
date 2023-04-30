@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const User = require('../models/user')
+const Order = require('../models/order')
 
 exports.getProducts = async (req, res, next) => {
   try {
@@ -44,6 +45,7 @@ exports.getIndex = async (req, res, next) => {
 exports.getCart = async (req, res, next) => {
   try {
     const products = await User.findById(req.user._id).populate('cart.items.productId');
+    console.log('//////////////////////////////////////////////reagegraegreaheraegr', products.cart.items)
     res.render('shop/cart', {
       path: '/cart',
       pageTitle: 'Your Cart',
@@ -69,7 +71,7 @@ exports.postCart = async (req, res, next) => {
 exports.postCartDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
-    await req.user.deleteItemFromCart(prodId);
+    await req.user.removeFromCart(prodId);
     res.redirect('/cart');
   } catch (error) {
     console.log(error);
@@ -78,7 +80,22 @@ exports.postCartDeleteProduct = async (req, res, next) => {
 
 exports.postOrder = async (req, res, next) => {
   try {
-    const result = await req.user.addOrder();
+    const products = await User.findById(req.user._id).populate('cart.items.productId');
+    const dataToUpdate = products.cart.items.map(i => {
+      return {
+        quantity: i.quantity,
+        product: { ...i.productId._doc }
+      }
+    })
+    const order = new Order({
+      user: {
+        name: req.user.name,
+        userId: req.user
+      },
+      products: dataToUpdate
+    })
+    order.save()
+    const result = await req.user.clearCart();
     res.redirect('/orders');
   } catch (error) {
     console.log(error);
@@ -94,6 +111,6 @@ exports.getOrders = async (req, res, next) => {
       orders: orders
     });
   } catch (error) {
-    console.log(error);
+    console.log(error, '//////////////////////');
   }
 };
